@@ -1,26 +1,32 @@
 class Calculator {
+    // Initialize the calculator with display elements and clear the state
     constructor(previousOperandTextElement, currentOperandTextElement) {
       this.previousOperandTextElement = previousOperandTextElement
       this.currentOperandTextElement = currentOperandTextElement
       this.clear()
+      this.history = []     // Initialize history for storing calculations
     }
   
     clear() {
+      // Reset the current and previous operands and the operation
       this.currentOperand = ''
       this.previousOperand = ''
       this.operation = undefined
     }
   
     delete() {
+      // Remove the last character from the current operand
       this.currentOperand = this.currentOperand.toString().slice(0, -1)
     }
   
     appendNumber(number) {
+      // Append a number to the current operand, avoiding multiple decimals
       if (number === '.' && this.currentOperand.includes('.')) return
       this.currentOperand = this.currentOperand.toString() + number.toString()
     }
   
     chooseOperation(operation) {
+      // Set the operation and prepare for the next operand
       if (this.currentOperand === '') return
       if (this.previousOperand !== '') {
         this.compute()
@@ -29,8 +35,26 @@ class Calculator {
       this.previousOperand = this.currentOperand
       this.currentOperand = ''
     }
+
+    addToHistory(calculation) {
+      // Add a calculation to the history and update the display
+      this.history.push(calculation)
+      this.updateHistoryDisplay()
+    }
+
+    updateHistoryDisplay() {
+      // Update the history display with the last 5 calculations
+      const historyList = document.getElementById('history-list')
+      historyList.innerHTML = ''
+      this.history.slice(-5).forEach(calc => {
+        const li = document.createElement('li')
+        li.innerText = calc
+        historyList.appendChild(li)
+      })
+    }
   
     compute() {
+      // Perform the calculation based on the current operation
       let computation
       const prev = parseFloat(this.previousOperand)
       const current = parseFloat(this.currentOperand)
@@ -52,11 +76,13 @@ class Calculator {
           return
       }
       this.currentOperand = computation
+      this.addToHistory(`${prev} ${this.operation} ${current} = ${computation}`)
       this.operation = undefined
       this.previousOperand = ''
     }
   
     getDisplayNumber(number) {
+      // Format the number for display, handling decimals and commas
       const stringNumber = number.toString()
       const integerDigits = parseFloat(stringNumber.split('.')[0])
       const decimalDigits = stringNumber.split('.')[1]
@@ -74,6 +100,7 @@ class Calculator {
     }
   
     updateDisplay() {
+      // Update the calculator display with the current and previous operands
       this.currentOperandTextElement.innerText =
         this.getDisplayNumber(this.currentOperand)
       if (this.operation != null) {
@@ -85,7 +112,7 @@ class Calculator {
     }
   }
   
-  
+  // Select all necessary DOM elements
   const numberButtons = document.querySelectorAll('[data-number]')
   const operationButtons = document.querySelectorAll('[data-operation]')
   const equalsButton = document.querySelector('[data-equals]')
@@ -93,16 +120,26 @@ class Calculator {
   const allClearButton = document.querySelector('[data-all-clear]')
   const previousOperandTextElement = document.querySelector('[data-previous-operand]')
   const currentOperandTextElement = document.querySelector('[data-current-operand]')
-  
+  const clearButton = document.querySelector('[clear-history]')
+
+  // Create a new Calculator instance
   const calculator = new Calculator(previousOperandTextElement, currentOperandTextElement)
-  
+
+  // Add event listeners to number buttons
   numberButtons.forEach(button => {
     button.addEventListener('click', () => {
       calculator.appendNumber(button.innerText)
       calculator.updateDisplay()
     })
   })
+
+  // Add event listener to clear-history button
+  clearButton.addEventListener('click', () => {
+    calculator.history = []
+    calculator.updateHistoryDisplay()
+  })
   
+  // Add event listeners to operation buttons
   operationButtons.forEach(button => {
     button.addEventListener('click', () => {
       calculator.chooseOperation(button.innerText)
@@ -110,16 +147,19 @@ class Calculator {
     })
   })
   
+  // Add event listener to equals button
   equalsButton.addEventListener('click', button => {
     calculator.compute()
     calculator.updateDisplay()
   })
   
+  // Add event listener to all-clear button
   allClearButton.addEventListener('click', button => {
     calculator.clear()
     calculator.updateDisplay()
   })
   
+  // Add event listener to delete button
   deleteButton.addEventListener('click', button => {
     calculator.delete()
     calculator.updateDisplay()
