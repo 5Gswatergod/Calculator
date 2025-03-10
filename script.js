@@ -53,33 +53,53 @@ class Calculator {
       })
     }
   
-    compute() {
-      // Perform the calculation based on the current operation
-      let computation
-      const prev = parseFloat(this.previousOperand)
-      const current = parseFloat(this.currentOperand)
-      if (isNaN(prev) || isNaN(current)) return
-      switch (this.operation) {
-        case '+':
-          computation = prev + current
-          break
-        case '-':
-          computation = prev - current
-          break
-        case '*':
-          computation = prev * current
-          break
-        case '÷':
-          computation = prev / current
-          break
-        default:
-          return
-      }
-      this.currentOperand = computation
-      this.addToHistory(`${prev} ${this.operation} ${current} = ${computation}`)
-      this.operation = undefined
-      this.previousOperand = ''
+  compute() {
+    let computation;
+    const prev = parseFloat(this.previousOperand);
+    const current = parseFloat(this.currentOperand);
+
+    if (isNaN(prev) || isNaN(current)) return;
+
+    switch (this.operation) {
+      case '+':
+        computation = prev + current;
+        break;
+      case '-':
+        computation = prev - current;
+        break;
+      case '*':
+        computation = prev * current;
+        break;
+      case '÷':
+        computation = current === 0 ? 'Error' : prev / current;
+        break;
+      case '^':
+        computation = Math.pow(prev, current);
+        break;
+      case '√':
+        computation = prev < 0 ? 'Error' : Math.sqrt(prev);
+        break;
+      case '%':
+        computation = prev % current;
+        break;
+      default:
+        return;
     }
+
+    // Round the result to 13 decimal places unconditionally
+    if (computation !== 'Error') {
+      computation = parseFloat(computation.toFixed(13));
+    }
+
+    this.currentOperand = computation;
+    if (computation !== 'Error') {
+      this.addToHistory(`${prev} ${this.operation} ${current} = ${computation}`);
+    }
+
+    this.operation = undefined;
+    this.previousOperand = '';
+  }
+
   
     getDisplayNumber(number) {
       // Format the number for display, handling decimals and commas
@@ -120,7 +140,7 @@ class Calculator {
   const allClearButton = document.querySelector('[data-all-clear]')
   const previousOperandTextElement = document.querySelector('[data-previous-operand]')
   const currentOperandTextElement = document.querySelector('[data-current-operand]')
-  const clearButton = document.querySelector('[clear-history]')
+  const clearButton = document.querySelector('#clear-history')
 
   // Create a new Calculator instance
   const calculator = new Calculator(previousOperandTextElement, currentOperandTextElement)
@@ -164,3 +184,23 @@ class Calculator {
     calculator.delete()
     calculator.updateDisplay()
   })
+
+  // Add event listener to keyboard inputs
+document.addEventListener('keydown', (event) => {
+  if (!isNaN(event.key) || event.key === '.') {
+    calculator.appendNumber(event.key);
+    calculator.updateDisplay();
+  } else if (['+', '-', '*', '/'].includes(event.key)) {
+    calculator.chooseOperation(event.key === '/' ? '÷' : event.key);
+    calculator.updateDisplay();
+  } else if (event.key === 'Enter') {
+    calculator.compute();
+    calculator.updateDisplay();
+  } else if (event.key === 'Backspace') {
+    calculator.delete();
+    calculator.updateDisplay();
+  } else if (event.key === 'Escape') {
+    calculator.clear();
+    calculator.updateDisplay();
+  }
+});
